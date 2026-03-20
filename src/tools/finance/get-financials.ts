@@ -56,9 +56,10 @@ import { getAnalystEstimates } from './estimates.js';
 import { getSegmentedRevenues } from './segments.js';
 import { getEarnings } from './earnings.js';
 import { getB3FinanceTools } from './b3/index.js';
+import { getInvestidor10FinanceTools } from './investidor10/index.js';
 
 // All finance tools available for routing
-const FINANCE_TOOLS: StructuredToolInterface[] = [
+export const FINANCE_TOOLS: StructuredToolInterface[] = [
   // Fundamentals (US)
   getIncomeStatements,
   getBalanceSheets,
@@ -72,7 +73,9 @@ const FINANCE_TOOLS: StructuredToolInterface[] = [
   getAnalystEstimates,
   // Other Data
   getSegmentedRevenues,
-  // B3 (Brazilian stocks — requires BRAPI_TOKEN)
+  // Investidor10 (Brazilian stocks and FIIs)
+  ...getInvestidor10FinanceTools(),
+  // B3 fallback (Brazilian stocks — requires BRAPI_TOKEN)
   ...getB3FinanceTools(),
 ];
 
@@ -80,7 +83,7 @@ const FINANCE_TOOLS: StructuredToolInterface[] = [
 const FINANCE_TOOL_MAP = new Map(FINANCE_TOOLS.map(t => [t.name, t]));
 
 // Build the router system prompt - simplified since LLM sees tool schemas
-function buildRouterPrompt(): string {
+export function buildFinancialsRouterPrompt(): string {
   return `You are a financial data routing assistant.
 Current date: ${getCurrentDate()}
 
@@ -107,13 +110,21 @@ Given a user's natural language query about financial data, call the appropriate
    - For cash flow, free cash flow → get_cash_flow_statements
    - For comprehensive analysis → get_all_financial_statements
 
-4. **Tool Selection (B3 — Brazilian stocks, requires BRAPI_TOKEN)**:
-   - For income statement data (revenue, net income, EBITDA) → get_b3_income_statements
-   - For balance sheet data (assets, liabilities, equity) → get_b3_balance_sheets
-   - For key ratios and statistics (P/E, P/VP, ROE, margins, EV/EBITDA) → get_b3_key_statistics
-   - B3 financials are denominated in BRL (R$)
-   - B3 ticker format: 4 uppercase letters + 1 digit (PETR4, VALE3, ITUB4)
-   - Common mappings: Petrobras → PETR4, Vale → VALE3, Itaú → ITUB4
+4. **Tool Selection (Brazilian stocks and FIIs — Investidor10 primary)**:
+   - For Brazilian stock indicators and key ratios → get_br_stock_indicators
+   - For Brazilian stock dividend and yield history → get_br_stock_dividends
+   - For Brazilian stock income statement tables → get_br_stock_income_statements
+   - For Brazilian stock balance sheet tables → get_br_stock_balance_sheets
+   - For Brazilian stock revenue trend charts → get_br_stock_revenue_chart
+   - For Brazilian financial institutions with Basel coverage → get_br_stock_basel_index
+   - For Brazilian FII indicator snapshots (P/VP, DY, net worth, metadata) → get_br_fii_indicators
+   - For Brazilian FII dividend history → get_br_fii_dividends
+   - For Brazilian FII vacancy history → get_br_fii_vacancy_history
+   - For Brazilian FII net worth history → get_br_fii_net_worth_history
+   - Use get_b3_income_statements / get_b3_balance_sheets / get_b3_key_statistics only as fallback for Brazilian stocks when Investidor10 is unavailable
+   - Brazilian stock tickers: PETR4, VALE3, ITUB4
+   - Brazilian FII tickers usually end in 11: HGLG11, KNCR11, MXRF11
+   - Brazilian financials are denominated in BRL (R$)
 
 5. **Efficiency**:
    - Prefer specific tools over general ones when possible
@@ -154,7 +165,7 @@ export function createGetFinancials(model: string): DynamicStructuredTool {
       onProgress?.('Fetching...');
       const { response } = await callLlm(input.query, {
         model,
-        systemPrompt: buildRouterPrompt(),
+        systemPrompt: buildFinancialsRouterPrompt(),
         tools: FINANCE_TOOLS,
       });
       const aiMessage = response as AIMessage;

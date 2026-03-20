@@ -55,9 +55,10 @@ import { getCryptoPriceSnapshot, getCryptoPrices, getCryptoTickers } from './cry
 import { getCompanyNews } from './news.js';
 import { getInsiderTrades } from './insider_trades.js';
 import { getB3MarketTools } from './b3/index.js';
+import { getInvestidor10MarketTools } from './investidor10/index.js';
 
 // All market data tools available for routing
-const MARKET_DATA_TOOLS: StructuredToolInterface[] = [
+export const MARKET_DATA_TOOLS: StructuredToolInterface[] = [
   // Stock Prices (US)
   getStockPrice,
   getStockPrices,
@@ -69,7 +70,9 @@ const MARKET_DATA_TOOLS: StructuredToolInterface[] = [
   // News & Activity
   getCompanyNews,
   getInsiderTrades,
-  // B3 (Brazilian stocks)
+  // Investidor10 (Brazilian stocks and FIIs)
+  ...getInvestidor10MarketTools(),
+  // B3 fallback (Brazilian stocks)
   ...getB3MarketTools(),
 ];
 
@@ -77,7 +80,7 @@ const MARKET_DATA_TOOLS: StructuredToolInterface[] = [
 const MARKET_DATA_TOOL_MAP = new Map(MARKET_DATA_TOOLS.map(t => [t.name, t]));
 
 // Build the router system prompt for market data
-function buildRouterPrompt(): string {
+export function buildMarketDataRouterPrompt(): string {
   return `You are a market data routing assistant.
 Current date: ${getCurrentDate()}
 
@@ -106,17 +109,21 @@ Given a user's natural language query about market data, call the appropriate to
    - For news, catalysts, recent announcements → get_company_news
    - For insider buying/selling activity → get_insider_trades
    - For "why did X go up/down" → combine get_stock_price + get_company_news
-   - For a current B3 snapshot (price, change%, volume) → get_b3_quote (if available)
-   - For historical B3 prices over a date range → get_b3_historical_prices
-   - For "what B3 tickers are available" → get_b3_tickers (if available)
-   - For combined B3 current + trend → call get_b3_quote + get_b3_historical_prices
+   - For a Brazilian stock current quote → get_br_stock_quote
+   - For Brazilian stock price history → get_br_stock_historical_prices
+   - For Brazilian stock dividend or yield history → get_br_stock_dividends
+   - For a Brazilian FII current quote → get_br_fii_quote
+   - For Brazilian FII price history → get_br_fii_historical_prices
+   - For Brazilian FII dividend or yield history → get_br_fii_dividends
+   - Use get_b3_quote / get_b3_historical_prices only as fallback when Investidor10 does not cover the requested stock data
 
-4. **B3 (Brazilian Stocks — B3 exchange)**:
-   - Ticker format: 4 uppercase letters + 1 digit (e.g., PETR4, VALE3, ITUB4); Units end in 11 (SANB11)
-   - ON (ordinary) shares end in 3; PN (preferred) shares end in 4 (PN shares are usually more liquid)
+4. **Brazilian Assets (Investidor10 primary, B3 fallback)**:
+   - Brazilian stock ticker format: 4 uppercase letters + 1 digit (e.g., PETR4, VALE3, ITUB4); Units often end in 11 (SANB11)
+   - FII tickers usually end in 11 (e.g., HGLG11, KNCR11, MXRF11)
    - Common mappings: Petrobras → PETR4, Vale → VALE3, Itaú → ITUB4, Ambev → ABEV3, Magazine Luiza → MGLU3
-   - get_b3_historical_prices is always available (no key needed)
-   - get_b3_quote and get_b3_tickers require BRAPI_TOKEN
+   - Investidor10 should be preferred for Brazilian stocks and FIIs whenever the query is about price, dividends, yield history, or current market snapshot
+   - get_b3_historical_prices is always available (Yahoo Finance, no key needed)
+   - get_b3_quote and get_b3_tickers require BRAPI_TOKEN and should be treated as fallbacks for stocks only
 
 5. **Efficiency**:
    - For current/latest price, use snapshot tools (not historical with limit 1)
@@ -152,7 +159,7 @@ export function createGetMarketData(model: string): DynamicStructuredTool {
       onProgress?.('Fetching market data...');
       const { response } = await callLlm(input.query, {
         model,
-        systemPrompt: buildRouterPrompt(),
+        systemPrompt: buildMarketDataRouterPrompt(),
         tools: MARKET_DATA_TOOLS,
       });
       const aiMessage = response as AIMessage;

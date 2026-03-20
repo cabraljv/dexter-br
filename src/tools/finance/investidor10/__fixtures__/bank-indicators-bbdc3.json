@@ -1,0 +1,30 @@
+{
+  "P/L": [
+    {
+      "year": "Atual",
+      "key": "p_l",
+      "value": 22.02,
+      "type": "decimal"
+    },
+    {
+      "year": "2025",
+      "key": "p_l",
+      "value": 25.024914441376,
+      "type": "decimal"
+    }
+  ],
+  "PAYOUT": [
+    {
+      "year": "Atual",
+      "key": "payout",
+      "value": 86.89388881151875,
+      "type": "percent"
+    },
+    {
+      "year": "2025",
+      "key": "payout",
+      "value": 83.418466932926,
+      "type": "percent"
+    }
+  ]
+}

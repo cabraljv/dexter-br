@@ -1,0 +1,26 @@
+{
+  "data": [
+    {
+      "title": "HGLG11",
+      "dividend_yield": 8.45,
+      "p_vp": 0.94,
+      "net_worth": 7056514999,
+      "segment": "Logístico / Indústria / Galpões",
+      "type": "Fundo de Tijolo",
+      "star_dy": false,
+      "star_pvp": false,
+      "star_nw": false
+    },
+    {
+      "title": "KNCR11",
+      "dividend_yield": 13.84,
+      "p_vp": 1.03,
+      "net_worth": 10954106977,
+      "segment": "Títulos e Valores Mobiliários",
+      "type": "Fundo de Papel",
+      "star_dy": false,
+      "star_pvp": false,
+      "star_nw": true
+    }
+  ]
+}

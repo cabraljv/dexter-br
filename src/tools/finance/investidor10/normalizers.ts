@@ -77,6 +77,17 @@ export function summarizeIntradaySeries(series: NormalizedTimeSeriesPoint[]) {
 
   const open = first.value;
   const close = last.value;
+  if (open === null || close === null) {
+    return {
+      open: null,
+      high: null,
+      low: null,
+      close: null,
+      change: null,
+      changePercent: null,
+    };
+  }
+
   const change = close - open;
 
   return {
@@ -137,7 +148,7 @@ export function normalizeStatementTable(table: unknown) {
   }
 
   const header = table[0] as unknown[];
-  const periods = [];
+  const periods: Array<{ period: string; avLabel: string; ahLabel: string }> = [];
   for (let index = 1; index < header.length; index += 3) {
     periods.push({
       period: String(header[index] ?? ''),
@@ -150,7 +161,12 @@ export function normalizeStatementTable(table: unknown) {
     .slice(1)
     .map((row) => {
       const name = String(row[0] ?? '');
-      const values = [];
+      const values: Array<{
+        period: string;
+        value: { display: string; raw: number | null };
+        av: string;
+        ah: string;
+      }> = [];
 
       for (let index = 1; index < row.length; index += 3) {
         const rawValue = row[index];

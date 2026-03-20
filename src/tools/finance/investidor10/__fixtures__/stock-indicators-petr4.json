@@ -1,0 +1,37 @@
+{
+  "P/L": [
+    {
+      "year": "Atual",
+      "key": "p_l",
+      "value": 5.47,
+      "type": "decimal"
+    },
+    {
+      "year": "2025",
+      "key": "p_l",
+      "value": 3.6069586003144,
+      "type": "decimal",
+      "description": "<p>P/L history</p>"
+    },
+    {
+      "year": "2024",
+      "key": "p_l",
+      "value": 12.742261886592,
+      "type": "decimal"
+    }
+  ],
+  "DIVIDEND YIELD (DY)": [
+    {
+      "year": "Atual",
+      "key": "dividend_yield_last_12_months",
+      "value": 6.89,
+      "type": "percent"
+    },
+    {
+      "year": "2025",
+      "key": "dividend_yield_last_12_months",
+      "value": 10.521619954575,
+      "type": "percent"
+    }
+  ]
+}

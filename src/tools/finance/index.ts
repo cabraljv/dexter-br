@@ -11,4 +11,19 @@ export { createGetFinancials } from './get-financials.js';
 export { createGetMarketData } from './get-market-data.js';
 export { createReadFilings } from './read-filings.js';
 export { createScreenStocks } from './screen-stocks.js';
-
+export {
+  getBrStockQuote,
+  getBrStockHistoricalPrices,
+  getBrStockIndicators,
+  getBrStockDividends,
+  getBrStockIncomeStatements,
+  getBrStockBalanceSheets,
+  getBrStockRevenueChart,
+  getBrStockBaselIndex,
+  getBrFiiQuote,
+  getBrFiiHistoricalPrices,
+  getBrFiiIndicators,
+  getBrFiiDividends,
+  getBrFiiVacancyHistory,
+  getBrFiiNetWorthHistory,
+} from './investidor10/index.js';
