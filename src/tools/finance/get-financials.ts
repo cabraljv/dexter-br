@@ -55,10 +55,11 @@ import { getKeyRatios, getHistoricalKeyRatios } from './key-ratios.js';
 import { getAnalystEstimates } from './estimates.js';
 import { getSegmentedRevenues } from './segments.js';
 import { getEarnings } from './earnings.js';
+import { getB3FinanceTools } from './b3/index.js';
 
 // All finance tools available for routing
 const FINANCE_TOOLS: StructuredToolInterface[] = [
-  // Fundamentals
+  // Fundamentals (US)
   getIncomeStatements,
   getBalanceSheets,
   getCashFlowStatements,
@@ -71,6 +72,8 @@ const FINANCE_TOOLS: StructuredToolInterface[] = [
   getAnalystEstimates,
   // Other Data
   getSegmentedRevenues,
+  // B3 (Brazilian stocks — requires BRAPI_TOKEN)
+  ...getB3FinanceTools(),
 ];
 
 // Create a map for quick tool lookup by name
@@ -95,7 +98,7 @@ Given a user's natural language query about financial data, call the appropriate
    - "past 5 years" → report_period_gte 5 years ago and limit 5 (annual) or 20 (quarterly)
    - "YTD" → report_period_gte Jan 1 of current year
 
-3. **Tool Selection**:
+3. **Tool Selection (US equities)**:
    - For latest financial metrics snapshot (P/E, margins, ROE, EPS, growth rates) → get_financial_metrics_snapshot
    - For historical P/E ratio, historical market cap, valuation metrics over time → get_key_ratios
    - For revenue, earnings, profitability → get_income_statements
@@ -104,7 +107,15 @@ Given a user's natural language query about financial data, call the appropriate
    - For cash flow, free cash flow → get_cash_flow_statements
    - For comprehensive analysis → get_all_financial_statements
 
-4. **Efficiency**:
+4. **Tool Selection (B3 — Brazilian stocks, requires BRAPI_TOKEN)**:
+   - For income statement data (revenue, net income, EBITDA) → get_b3_income_statements
+   - For balance sheet data (assets, liabilities, equity) → get_b3_balance_sheets
+   - For key ratios and statistics (P/E, P/VP, ROE, margins, EV/EBITDA) → get_b3_key_statistics
+   - B3 financials are denominated in BRL (R$)
+   - B3 ticker format: 4 uppercase letters + 1 digit (PETR4, VALE3, ITUB4)
+   - Common mappings: Petrobras → PETR4, Vale → VALE3, Itaú → ITUB4
+
+5. **Efficiency**:
    - Prefer specific tools over general ones when possible
    - Use get_all_financial_statements only when multiple statement types needed
    - For comparisons between companies, call the same tool for each ticker

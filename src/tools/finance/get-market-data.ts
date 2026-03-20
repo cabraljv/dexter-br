@@ -54,10 +54,11 @@ import { getStockPrice, getStockPrices, getStockTickers } from './stock-price.js
 import { getCryptoPriceSnapshot, getCryptoPrices, getCryptoTickers } from './crypto.js';
 import { getCompanyNews } from './news.js';
 import { getInsiderTrades } from './insider_trades.js';
+import { getB3MarketTools } from './b3/index.js';
 
 // All market data tools available for routing
 const MARKET_DATA_TOOLS: StructuredToolInterface[] = [
-  // Stock Prices
+  // Stock Prices (US)
   getStockPrice,
   getStockPrices,
   getStockTickers,
@@ -68,6 +69,8 @@ const MARKET_DATA_TOOLS: StructuredToolInterface[] = [
   // News & Activity
   getCompanyNews,
   getInsiderTrades,
+  // B3 (Brazilian stocks)
+  ...getB3MarketTools(),
 ];
 
 // Create a map for quick tool lookup by name
@@ -103,8 +106,19 @@ Given a user's natural language query about market data, call the appropriate to
    - For news, catalysts, recent announcements → get_company_news
    - For insider buying/selling activity → get_insider_trades
    - For "why did X go up/down" → combine get_stock_price + get_company_news
+   - For a current B3 snapshot (price, change%, volume) → get_b3_quote (if available)
+   - For historical B3 prices over a date range → get_b3_historical_prices
+   - For "what B3 tickers are available" → get_b3_tickers (if available)
+   - For combined B3 current + trend → call get_b3_quote + get_b3_historical_prices
 
-4. **Efficiency**:
+4. **B3 (Brazilian Stocks — B3 exchange)**:
+   - Ticker format: 4 uppercase letters + 1 digit (e.g., PETR4, VALE3, ITUB4); Units end in 11 (SANB11)
+   - ON (ordinary) shares end in 3; PN (preferred) shares end in 4 (PN shares are usually more liquid)
+   - Common mappings: Petrobras → PETR4, Vale → VALE3, Itaú → ITUB4, Ambev → ABEV3, Magazine Luiza → MGLU3
+   - get_b3_historical_prices is always available (no key needed)
+   - get_b3_quote and get_b3_tickers require BRAPI_TOKEN
+
+5. **Efficiency**:
    - For current/latest price, use snapshot tools (not historical with limit 1)
    - For comparisons between assets, call the same tool for each ticker
    - Use the smallest date range that answers the question
